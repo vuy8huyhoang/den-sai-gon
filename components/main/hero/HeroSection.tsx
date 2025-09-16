@@ -1,8 +1,7 @@
-import Container from '../../../components/main/layout/Container'
-import HeroCarousel from './HeroCarousel'
-import PromoCard from '../../../components/main/cards/PromoCard'
-import { BANNERS } from '../../../lib/data'
-
+import Container from "../../../components/main/layout/Container"
+import HeroCarousel from "./HeroCarousel"
+import PromoCard from "../../../components/main/cards/PromoCard"
+import { BANNERS } from "../../../lib/data"
 
 export default function HeroSection() {
     return (
@@ -15,7 +14,6 @@ export default function HeroSection() {
                         heightClass="h-[300px] md:h-[400px]"
                         autoPlayMs={5000} // 0 để tắt
                     />
-
                 </div>
                 <div className="lg:col-span-3 flex flex-col gap-4">
                     <PromoCard image="/den-sai-gon/banners/banner3.jpg" />

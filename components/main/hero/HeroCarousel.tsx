@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState, useCallback } from "react"
 import type React from "react"
 
 import Image from "next/image"
@@ -9,10 +9,10 @@ import HeroArrow from "./HeroArrow"
 export type Banner = { src: string; alt?: string; href?: string }
 
 /**
- * HeroCarousel — drag mượt + loop vô hạn (giữ nguyên bo góc & class cũ)
- * - KHÔNG thay đổi className hiện tại (giữ rounded trên slide & ảnh)
- * - Sửa bug kéo: bỏ CSS snap cứng → dùng logic snap theo ngưỡng & vận tốc
- * - Đến cuối quay vòng về đầu (clone 2 đầu)
+ * HeroCarousel — improved drag handling + smoother animations
+ * - Fixed scroll conflict between vertical and horizontal
+ * - Improved touch handling for mobile
+ * - Smoother transitions and better snap logic
  */
 export default function HeroCarousel({
   images = [],
@@ -42,6 +42,8 @@ export default function HeroCarousel({
     index: Math.min(1, slides.length - 1), // begin at first real slide
     scrollTimer: 0 as unknown as number,
     autoTimer: 0 as unknown as number,
+    isDragging: false,
+    preventScroll: false,
   })
 
   // Init vị trí + chiều rộng slide
@@ -64,7 +66,7 @@ export default function HeroCarousel({
       const el = trackRef.current
       if (!el) return
       S.current.width = el.clientWidth
-      el.scrollTo({ left: S.current.index * S.current.width, behavior: "instant" as ScrollBehavior })
+      el.scrollTo({ left: S.current.index * S.current.width, behavior: "instant" })
     }
     window.addEventListener("resize", onResize)
     return () => window.removeEventListener("resize", onResize)
@@ -73,45 +75,55 @@ export default function HeroCarousel({
   // Auto play
   useEffect(() => {
     if (!autoPlayMs || slides.length <= 1) return
-    const tick = () => goToIndex(nearestIndex() + 1, true)
+    const tick = () => {
+      if (!S.current.isDragging) {
+        goToIndex(nearestIndex() + 1, true)
+      }
+    }
     S.current.autoTimer = window.setInterval(tick, autoPlayMs)
     return () => window.clearInterval(S.current.autoTimer)
   }, [autoPlayMs, slides.length])
 
-  const nearestIndex = () => {
+  const nearestIndex = useCallback(() => {
     const el = trackRef.current!
     return Math.round(el.scrollLeft / S.current.width)
-  }
+  }, [])
 
-  const normalizeLoop = () => {
+  const normalizeLoop = useCallback(() => {
     const el = trackRef.current!
     const len = slides.length
     if (len <= 1) return
     if (S.current.index === 0) {
       S.current.index = len - 2 // last real
-      el.scrollTo({ left: S.current.index * S.current.width, behavior: "instant" as ScrollBehavior })
+      el.scrollTo({ left: S.current.index * S.current.width, behavior: "instant" })
     } else if (S.current.index === len - 1) {
       S.current.index = 1 // first real
-      el.scrollTo({ left: S.current.index * S.current.width, behavior: "instant" as ScrollBehavior })
+      el.scrollTo({ left: S.current.index * S.current.width, behavior: "instant" })
     }
-  }
+  }, [slides.length])
 
-  const goToIndex = (i: number, smooth: boolean) => {
-    const el = trackRef.current!
-    if (!el || slides.length === 0) return
-    S.current.index = i
-    el.scrollTo({ left: i * S.current.width, behavior: smooth ? "smooth" : ("instant" as ScrollBehavior) })
-    if (S.current.scrollTimer) window.clearTimeout(S.current.scrollTimer)
-    S.current.scrollTimer = window.setTimeout(
-      () => {
-        normalizeLoop()
-        updateArrows()
-      },
-      smooth ? 360 : 0,
-    )
-  }
+  const goToIndex = useCallback(
+    (i: number, smooth: boolean) => {
+      const el = trackRef.current!
+      if (!el || slides.length === 0) return
+      S.current.index = i
+      el.scrollTo({
+        left: i * S.current.width,
+        behavior: smooth ? "smooth" : "instant",
+      })
+      if (S.current.scrollTimer) window.clearTimeout(S.current.scrollTimer)
+      S.current.scrollTimer = window.setTimeout(
+        () => {
+          normalizeLoop()
+          updateArrows()
+        },
+        smooth ? 500 : 0,
+      )
+    },
+    [slides.length, normalizeLoop],
+  )
 
-  const updateArrows = () => {
+  const updateArrows = useCallback(() => {
     if (slides.length <= 1) {
       setCanLeft(false)
       setCanRight(false)
@@ -119,61 +131,129 @@ export default function HeroCarousel({
     }
     setCanLeft(true)
     setCanRight(true)
-  }
+  }, [slides.length])
 
-  const goBy = (d: 1 | -1) => goToIndex(nearestIndex() + d, true)
+  const goBy = useCallback((d: 1 | -1) => goToIndex(nearestIndex() + d, true), [goToIndex, nearestIndex])
 
-  // ----- Drag (PC) với ngưỡng + vận tốc -----
-  const onMouseDown: React.MouseEventHandler<HTMLDivElement> = (e) => {
+  const startDrag = useCallback((clientX: number) => {
     const el = trackRef.current
     if (!el) return
     S.current.down = true
-    S.current.startX = e.pageX
+    S.current.isDragging = true
+    S.current.startX = clientX
     S.current.startLeft = el.scrollLeft
     S.current.startTime = performance.now()
+    S.current.preventScroll = true
     setDragging(true)
-  }
 
-  const onMouseMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    // Clear auto-play timer when dragging starts
+    if (S.current.autoTimer) {
+      window.clearInterval(S.current.autoTimer)
+    }
+  }, [])
+
+  const updateDrag = useCallback((clientX: number) => {
     const el = trackRef.current
     if (!el || !S.current.down) return
-    e.preventDefault()
-    const dx = e.pageX - S.current.startX
+    const dx = clientX - S.current.startX
     el.scrollLeft = S.current.startLeft - dx
-  }
+  }, [])
 
-  const endDrag = () => {
+  const endDrag = useCallback(() => {
     if (!S.current.down) return
     S.current.down = false
+    S.current.isDragging = false
     setDragging(false)
 
     const el = trackRef.current!
     const dt = Math.max(1, performance.now() - S.current.startTime)
-    const delta = el.scrollLeft - S.current.startLeft // >0 kéo sang phải (next)
+    const delta = el.scrollLeft - S.current.startLeft
     const v = Math.abs(delta) / dt // px/ms
     const i = nearestIndex()
 
-    const threshold = S.current.width * 0.22
-    const fast = v > 0.55 // vuốt nhanh → nảy qua slide
+    const threshold = S.current.width * 0.25
+    const fast = v > 0.4
 
     if (Math.abs(delta) > threshold || fast) {
       goToIndex(i + (delta > 0 ? 1 : -1), true)
     } else {
       goToIndex(i, true)
     }
-  }
 
-  // Wheel dọc → ngang + snap lại sau khi dừng
-  const onWheel: React.WheelEventHandler<HTMLDivElement> = (e) => {
-    const el = trackRef.current
-    if (!el) return
-    if (el.scrollWidth > el.clientWidth + 2) {
-      el.scrollLeft += e.deltaY
+    setTimeout(() => {
+      S.current.preventScroll = false
+    }, 100)
+  }, [nearestIndex, goToIndex])
+
+  // Mouse events
+  const onMouseDown: React.MouseEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
       e.preventDefault()
-      if (S.current.scrollTimer) window.clearTimeout(S.current.scrollTimer)
-      S.current.scrollTimer = window.setTimeout(() => goToIndex(nearestIndex(), true), 140)
-    }
-  }
+      startDrag(e.pageX)
+    },
+    [startDrag],
+  )
+
+  const onMouseMove: React.MouseEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      if (!S.current.down) return
+      e.preventDefault()
+      updateDrag(e.pageX)
+    },
+    [updateDrag],
+  )
+
+  const onTouchStart: React.TouchEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      if (e.touches.length === 1) {
+        startDrag(e.touches[0].clientX)
+      }
+    },
+    [startDrag],
+  )
+
+  const onTouchMove: React.TouchEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      if (!S.current.down || e.touches.length !== 1) return
+      const touch = e.touches[0]
+      const dx = Math.abs(touch.clientX - S.current.startX)
+      const dy = Math.abs(touch.clientY - (e.target as any).getBoundingClientRect?.()?.top || 0)
+
+      if (dx > dy && dx > 10) {
+        e.preventDefault()
+        updateDrag(touch.clientX)
+      }
+    },
+    [updateDrag],
+  )
+
+  const onTouchEnd: React.TouchEventHandler<HTMLDivElement> = useCallback(() => {
+    endDrag()
+  }, [endDrag])
+
+  const onWheel: React.WheelEventHandler<HTMLDivElement> = useCallback(
+    (e) => {
+      const el = trackRef.current
+      if (!el || S.current.preventScroll) return
+
+      const isHorizontalScroll = Math.abs(e.deltaX) > Math.abs(e.deltaY)
+      const hasHorizontalSpace = el.scrollWidth > el.clientWidth + 2
+
+      if (hasHorizontalSpace && (isHorizontalScroll || e.shiftKey)) {
+        el.scrollLeft += e.deltaX || e.deltaY
+        e.preventDefault()
+        if (S.current.scrollTimer) window.clearTimeout(S.current.scrollTimer)
+        S.current.scrollTimer = window.setTimeout(() => goToIndex(nearestIndex(), true), 150)
+      }
+    },
+    [goToIndex, nearestIndex],
+  )
+
+  const onScroll = useCallback(() => {
+    const el = trackRef.current
+    if (!el || S.current.isDragging) return
+    S.current.index = Math.round(el.scrollLeft / S.current.width)
+  }, [])
 
   // Khoá select khi kéo
   useEffect(() => {
@@ -187,8 +267,6 @@ export default function HeroCarousel({
 
   return (
     <div className="relative overflow-hidden">
-      {/* giữ nguyên wrapper */}
-      {/* Track: bỏ snap-mandatory để tránh xung đột, dùng logic snap tay */}
       <div
         ref={trackRef}
         className={[
@@ -201,11 +279,14 @@ export default function HeroCarousel({
         onMouseMove={onMouseMove}
         onMouseLeave={endDrag}
         onMouseUp={endDrag}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
         onWheel={onWheel}
-        onScroll={() => {
-          const el = trackRef.current
-          if (!el) return
-          S.current.index = Math.round(el.scrollLeft / S.current.width)
+        onScroll={onScroll}
+        style={{
+          scrollBehavior: dragging ? "auto" : "smooth",
+          WebkitOverflowScrolling: "touch",
         }}
       >
         {slides.map((b, i) => (
@@ -252,10 +333,10 @@ function svgGradient(a: string, b: string) {
   <svg xmlns='http://www.w3.org/2000/svg' width='1600' height='600'>\
     <defs>\
       <linearGradient id='g' x1='0' y1='1' x2='1' y2='0'>\
-        <stop offset='0' stopColor='${a}'/>\\
-        <stop offset='1' stopColor='${b}'/>\\
-      </linearGradient>\\
-    </defs>\\
-    <rect width='100%' height='100%' fill='url(#g)'/>\\
+        <stop offset='0' stopColor='${a}'/>\
+        <stop offset='1' stopColor='${b}'/>\
+      </linearGradient>\
+    </defs>\
+    <rect width='100%' height='100%' fill='url(#g)'/>\
   </svg>`
 }
