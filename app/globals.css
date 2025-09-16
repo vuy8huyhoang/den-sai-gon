@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global base nhỏ gọn, tránh reset mạnh làm hỏng layout Tailwind */
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-800;
+}
+
+img,
+svg {
+  display: block;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+/* --- 2.2 Helpers dùng chung (đặt trong layer) --- */
+@layer utilities {
+  @keyframes phone-wiggle {
+    0%,
+    100% {
+      transform: rotate(0deg);
+    }
+
+    10% {
+      transform: rotate(15deg);
+    }
+
+    20% {
+      transform: rotate(-12deg);
+    }
+
+    30% {
+      transform: rotate(10deg);
+    }
+
+    40% {
+      transform: rotate(-8deg);
+    }
+
+    50% {
+      transform: rotate(6deg);
+    }
+
+    60% {
+      transform: rotate(-4deg);
+    }
+
+    70% {
+      transform: rotate(2deg);
+    }
+
+    80% {
+      transform: rotate(-1deg);
+    }
+  }
+
+  .phone-wiggle {
+    animation: phone-wiggle 1.4s ease-in-out infinite both;
+    transform-origin: 55% 55%;
+  }
+
+  /* Vòng ripple lan ra (tùy chọn) */
+  @keyframes phone-ripple {
+    0% {
+      opacity: 0.45;
+      transform: scale(1);
+    }
+
+    70% {
+      opacity: 0;
+      transform: scale(1.9);
+    }
+
+    100% {
+      opacity: 0;
+      transform: scale(1.9);
+    }
+  }
+
+  .phone-ripple {
+    position: relative;
+  }
+
+  .phone-ripple::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 9999px;
+    border: 2px solid rgb(239 68 68);
+    /* red-500 */
+    opacity: 0;
+    animation: phone-ripple 1.8s ease-out infinite;
+  }
+
+  /* (tùy chọn) dừng rung khi hover */
+  .phone-wiggle-paused:hover .phone-wiggle {
+    animation-play-state: paused;
+  }
+  .container-x {
+    @apply w-full max-w-container mx-auto px-3 sm:px-4 md:px-6;
+  }
+
+  .card {
+    @apply bg-white shadow-soft rounded-2xl overflow-hidden;
+  }
+
+  .icon-circle {
+    @apply rounded-full bg-slate-100 inline-flex items-center justify-center;
+  }
+
+  .badge {
+    @apply text-xs px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700;
+  }
+  .shadow-soft {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+  .top-shadow {
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  }
+}
