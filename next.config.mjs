@@ -7,7 +7,6 @@ const nextConfig = {
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // unoptimized: true, // Removed for better performance
   },
   
   // Compression
@@ -58,10 +57,8 @@ const nextConfig = {
     ]
   },
 
-  // Experimental features for better performance
   experimental: {
     optimizePackageImports: ['lucide-react'],
-    optimizeCss: true,
     scrollRestoration: true,
   },
 
