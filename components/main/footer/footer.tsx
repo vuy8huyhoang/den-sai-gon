@@ -66,7 +66,7 @@ export default function Footer() {
                             ]}
                             phone="0853892898"
                             note="Chi Nhánh Chính"
-                            mapHref="https://maps.app.goo.gl/GHjcR61tai5t4esZ9"
+                            mapHref="https://maps.app.goo.gl/qp5D9isKXvHn8isx5"
                         />
 
                        
