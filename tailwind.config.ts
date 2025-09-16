@@ -13,7 +13,7 @@ const config: Config = {
   theme: {
     extend: {
       maxWidth: {
-        container: "1200px",
+        container: "1400px",
       },
       colors: {
         background: "hsl(var(--background))",

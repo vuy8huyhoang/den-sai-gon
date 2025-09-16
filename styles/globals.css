@@ -88,6 +88,5 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: inter, Arial, Helvetica, sans-serif;
   }
 }
