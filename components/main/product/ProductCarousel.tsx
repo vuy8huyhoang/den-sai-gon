@@ -209,7 +209,7 @@ export default function ProductCarouselAligned({
         {/* Header */}
         <div className={`bg-[#079553] rounded-[14px] h-12 flex items-center ${innerX}`}>
           <h2 className="text-white font-bold text-[20px] tracking-wide">{title}</h2>
-          <div className="ml-auto flex gap-8 text-white/95 text-[14px]">
+          <div className="hidden md:flex ml-auto  gap-8 text-white/95 text-[14px]">
             {tabs.map((t, i) => (
               <button key={i} className="hover:underline/50 whitespace-nowrap transition-all duration-200">
                 {t}
