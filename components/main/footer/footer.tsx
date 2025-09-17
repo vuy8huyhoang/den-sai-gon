@@ -12,7 +12,7 @@ import { MapPin, Phone, Mail, ShieldCheck, Facebook, Youtube, ArrowUpRight, Chev
 
 export default function Footer() {
     return (
-        <footer className="relative bg-white mb-24 md:mb-0">
+        <footer className="relative bg-white pb-24 md:pb-0">
             {/* Accent gradient bar */}
             <div className="h-1 w-full bg-gradient-to-r from-emerald-600 via-teal-500 to-emerald-400" />
 
