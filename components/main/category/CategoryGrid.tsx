@@ -45,7 +45,7 @@ export default function CategoryGrid({
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60'
             )}
         >
-            <div className="flex flex-col items-center p-2.5 md:p-3">
+            <div className="flex flex-col items-center p-1 md:p-2">
                 {/* Image frame with fixed ratio to avoid layout shift on mobile */}
                 <div className={cls('relative w-full', aspectClass, 'overflow-hidden rounded-lg bg-slate-50')}
                     style={{ maxWidth: 164 }}>
@@ -87,7 +87,7 @@ export default function CategoryGrid({
 
     // Default: responsive grid (denser on mobile)
     return (
-        <div className={cls('grid gap-2 md:gap-3', baseCols, 'sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10', className)}>
+        <div className={cls('grid gap-1 md:gap-2', baseCols, 'sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-9', className)}>
             {items.map((it, i) => (
                 <Card it={it} i={i} key={i} />
             ))}
