@@ -1,6 +1,7 @@
-// components/category/CategoryGrid.tsx
+// components/category/CategoryGrid.tsx — mobile‑optimized
 'use client'
 import Image from 'next/image'
+import React from 'react'
 
 export type CatItem = {
     title: string
@@ -8,72 +9,100 @@ export type CatItem = {
     href?: string
 }
 
-export default function CategoryGrid({ items }: { items: CatItem[] }) {
-    return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9 gap-2">
-            {items.map((it, i) => (
-                <a
-                    key={i}
-                    href={it.href ?? '#'}
-                    className="block rounded-xl border border-slate-200 bg-white hover:shadow-sm transition-shadow"
-                >
-                    <div className="flex flex-col items-center p-3">
-                        <div className="relative w-[150px] h-[110px] md:w-[150px] md:h-[120px]">
-                            <Image
-                                src={it.image}
-                                alt={it.title}
-                                fill
-                                className="object-contain"
-                                sizes="(min-width: 1280px) 12vw, (min-width: 1024px) 16vw, (min-width: 768px) 22vw, 40vw"
-                                priority={i < 4}
-                            />
-                        </div>
-                        <div className="mt-2 text-[15px] font-medium text-slate-800 text-center">{it.title}</div>
+export type CategoryGridProps = {
+    items: CatItem[]
+    /** Default: 'grid'. If set to 'scroll', mobile turns into a horizontal scroller (snap). */
+    variant?: 'grid' | 'scroll'
+    /** Mobile columns for grid variant (2 | 3 | 4). Default: 3 */
+    mobileCols?: 2 | 3 | 4
+    /** Card aspect ratio. Default: 'square' */
+    aspect?: 'square' | 'rect' // rect ~ 4/3
+    className?: string
+}
+
+const cls = (...s: (string | false | null | undefined)[]) => s.filter(Boolean).join(' ')
+
+export default function CategoryGrid({
+    items,
+    variant = 'grid',
+    mobileCols = 4,
+    aspect = 'square',
+    className = '',
+}: CategoryGridProps) {
+    // responsive column classes (mobile first)
+    const baseCols = mobileCols === 4 ? 'grid-cols-4' : mobileCols === 2 ? 'grid-cols-2' : 'grid-cols-3'
+    const aspectClass = aspect === 'rect' ? 'aspect-[4/3]' : 'aspect-square'
+
+    // Shared card styles — tighter on mobile, bigger on desktop
+    const Card = ({ it, i }: { it: CatItem; i: number }) => (
+        <a
+            key={i}
+            href={it.href ?? '#'}
+            aria-label={it.title}
+            className={cls(
+                'group block rounded-xl border border-slate-200/90 bg-white/95',
+                'hover:shadow-sm active:translate-y-[1px] transition',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60'
+            )}
+        >
+            <div className="flex flex-col items-center p-2.5 md:p-3">
+                {/* Image frame with fixed ratio to avoid layout shift on mobile */}
+                <div className={cls('relative w-full', aspectClass, 'overflow-hidden rounded-lg bg-slate-50')}
+                    style={{ maxWidth: 164 }}>
+                    <Image
+                        src={it.image}
+                        alt={it.title}
+                        fill
+                        loading={i > 5 ? 'lazy' : 'eager'}
+                        className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                        sizes="(min-width:1024px) 12vw, (min-width:768px) 18vw, 30vw"
+                        priority={i < 3}
+                    />
+                </div>
+                {/* Title */}
+                <div className="mt-2 text-center text-[11.5px] md:text-[14px] font-medium text-slate-800 leading-snug line-clamp-2">
+                    {it.title}
+                </div>
+            </div>
+        </a>
+    )
+
+    if (variant === 'scroll') {
+        // Mobile: horizontal scroll with snap; Desktop: grid as usual
+        return (
+            <div className={cls('md:grid md:gap-3', baseCols, 'md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8', className)}>
+                {/* mobile track */}
+                <div className="-mx-3 px-3 md:mx-0 md:px-0 md:contents">
+                    <div className="flex gap-2 overflow-x-auto md:block [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory md:overflow-visible">
+                        {items.map((it, i) => (
+                            <div key={i} className="snap-start shrink-0 w-[44%] sm:w-[38%] md:w-auto md:shrink md:snap-none">
+                                <Card it={it} i={i} />
+                            </div>
+                        ))}
                     </div>
-                </a>
+                </div>
+            </div>
+        )
+    }
+
+    // Default: responsive grid (denser on mobile)
+    return (
+        <div className={cls('grid gap-2 md:gap-3', baseCols, 'sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10', className)}>
+            {items.map((it, i) => (
+                <Card it={it} i={i} key={i} />
             ))}
         </div>
     )
 }
 
-// ==============================
-// Ví dụ dùng trong page/section
-// ==============================
-// import CategoryGrid, { CatItem } from '@/components/category/CategoryGrid'
-//
-// const ITEMS: CatItem[] = [
-//   { title: 'Đèn LED âm trần', image: '/cats/downlight.png' },
-//   { title: 'Đèn chùm', image: '/cats/chandelier.png' },
-//   { title: 'Đèn thả', image: '/cats/pendant.png' },
-//   { title: 'Đèn LED ốp trần', image: '/cats/surface.png' },
-//   { title: 'Quạt trần', image: '/cats/fan.png' },
-//   { title: 'Đèn LED panel', image: '/cats/panel.png' },
-//   { title: 'Đèn LED dây', image: '/cats/strip.png' },
-//   { title: 'Đèn tuýp LED', image: '/cats/tube.png' },
-//   { title: 'Bóng đèn LED', image: '/cats/bulb.png' },
-//   { title: 'Đèn LED rọi ray', image: '/cats/track.png' },
-//   { title: 'Đèn tường', image: '/cats/wall.png' },
-//   { title: 'Đèn bàn', image: '/cats/table.png' },
-//   { title: 'Đèn cây', image: '/cats/floor.png' },
-//   { title: 'Đèn LED pha', image: '/cats/flood.png' },
-//   { title: 'Đèn sân vườn', image: '/cats/garden.png' },
-//   { title: 'Đèn rọi ngoài trời', image: '/cats/spot-out.png' },
-//   { title: 'Đèn thả văn phòng', image: '/cats/pendant-office.png' },
-//   { title: 'Thiết bị điện', image: '/cats/electric.png' },
-// ]
-//
-// export default function CategorySection(){
-//   return (
-//     <section className="py-6">
-//       <div className="container-x">
-//         <CategoryGrid items={ITEMS} />
-//       </div>
-//     </section>
-//   )
-// }
+/* ---------------------------------------------
+USAGE
 
-/* Gợi ý:
-- Đặt ảnh vào public/cats/ theo tên ở trên
-- Tăng/giảm kích thước item: chỉnh w/h của khung ảnh và font-size
-- Bo góc & viền giống ảnh: rounded-xl + border-slate-200
-*/
+<CategoryGrid items={cats} />
+
+// Horizontal scroll on mobile, grid on desktop
+<CategoryGrid items={cats} variant="scroll" />
+
+// 4 columns on mobile, rectangular thumbnails
+<CategoryGrid items={cats} mobileCols={4} aspect="rect" />
+---------------------------------------------- */
