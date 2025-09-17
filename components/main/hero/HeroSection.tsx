@@ -5,13 +5,13 @@ import { BANNERS } from "../../../lib/data"
 
 export default function HeroSection() {
     return (
-        <section className="py-4">
+        <section className="pt-4 md:py-4">
             <Container className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                 <div className="lg:col-span-9">
                     {/* Truyền ảnh qua prop images + tuỳ chỉnh chiều cao */}
                     <HeroCarousel
                         images={BANNERS}
-                        heightClass="h-[300px] md:h-[400px]"
+                        heightClass="h-[150px] md:h-[400px]"
                         autoPlayMs={5000} // 0 để tắt
                     />
                 </div>

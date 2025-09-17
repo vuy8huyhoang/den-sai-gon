@@ -29,7 +29,7 @@ export default function PromoCard({
     const fitClass = fit === 'contain' ? 'object-contain' : 'object-cover'
     
     const card = (
-        <div className={`card relative overflow-hidden ${roundedClass} ${heightClass}`}>
+        <div className={`card relative overflow-hidden hidden md:block ${roundedClass} ${heightClass}`}>
             <Image
                 src={image}
                 alt={alt ?? ''}

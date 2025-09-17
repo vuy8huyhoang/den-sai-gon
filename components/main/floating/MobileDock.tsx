@@ -98,7 +98,7 @@ export default function MobileDockSimpleImages({
             role="navigation"
             aria-label="Mobile dock"
             className={[
-                "md:hidden fixed inset-x-0 bottom-0 z-50",
+                "md:hidden fixed inset-x-0 bottom-0 z-40",
                 // glassy bar
                 "supports-[backdrop-filter]:backdrop-blur bg-white/88 border-t border-slate-200",
                 "shadow-[0_-10px_24px_rgba(2,6,23,0.06)]",
