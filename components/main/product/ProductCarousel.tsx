@@ -127,7 +127,7 @@ function useDragScroll(ref: React.RefObject<HTMLDivElement>) {
   return {
     dragging,
     handlers: {
-      onMouseDown,
+
       onMouseMove,
       onMouseLeave: end,
       onMouseUp: end,
