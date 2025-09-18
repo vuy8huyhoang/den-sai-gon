@@ -109,13 +109,6 @@ export default function InstallSupportCard({
         { label: 'Đèn âm trần', priceFrom: 30000, unit: 'cái khi lấy số lượng lớn' },
         { label: 'Đèn âm trần', priceFrom: 120000, unit: 'cái dành cho bán lẻ' },
     ],
-    calculatorHref,
-    onOpenCalculator,
-    hotlines = [
-        { city: 'Hà Nội', phone: '0902035326' },
-        { city: 'Hải Phòng', phone: '0902035326' },
-        { city: 'Đà Nẵng', phone: '0901709043' },
-    ],
     className = '',
 }: InstallSupportCardProps) {
     return (

@@ -1,10 +1,13 @@
-// -----------------------------------------------------------------------------
-// components/pdp/ProductGallery.tsx — supports YouTube and picks video first
 'use client'
 import Image from 'next/image'
 import React, { useMemo, useState } from 'react'
 import type { Media } from './types'
 
+/**
+ * ProductGallery — mobile thumbnails BELOW main image
+ * - Mobile: stack (main viewer first, thumbs as a horizontal row underneath)
+ * - ≥sm: original two-column layout (thumbs left, main right)
+ */
 export default function ProductGallery({
     media,
     autoPlayFirstVideo = true,
@@ -31,20 +34,51 @@ export default function ProductGallery({
 
     // Helper: pick a thumbnail for video (YouTube or custom poster)
     const videoThumb = (m: Media) =>
-        m.thumb || (m as any).poster || ((m as any).youtubeId ? `https://img.youtube.com/vi/${(m as any).youtubeId}/hqdefault.jpg` : undefined)
+        m.thumb ||
+        (m as any).poster ||
+        ((m as any).youtubeId ? `https://img.youtube.com/vi/${(m as any).youtubeId}/hqdefault.jpg` : undefined)
 
     return (
-        <div className="grid grid-cols-[76px,1fr] gap-4 sm:grid-cols-[86px,1fr]">
-            {/* Thumbnails */}
-            <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-[86px,1fr] gap-3 sm:gap-4">
+            {/* Main viewer (first on mobile) */}
+            <div className="order-1 sm:order-2 relative min-h-[300px] sm:min-h-[600px] rounded-lg border border-slate-200 bg-white overflow-hidden">
+                {isVideo ? (
+                    mainEmbed ? (
+                        <iframe
+                            className="absolute inset-0 h-full w-full"
+                            src={mainEmbed}
+                            title={main.label || 'product video'}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            allowFullScreen
+                        />
+                    ) : (
+                        <div className="absolute inset-0 grid place-items-center text-slate-700">
+                            <div className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm">Không tìm thấy nguồn video</div>
+                        </div>
+                    )
+                ) : main.type === 'image' ? (
+                    <Image src={main.src} alt={main.label || 'image'} fill sizes="760px" className="object-contain" />
+                ) : (
+                    <div className="absolute inset-0 grid place-items-center text-slate-700">
+                        <div className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm">
+                            {main.type === 'spec' ? 'Bảng thông số kỹ thuật' : 'Mô hình 3D'}
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Thumbnails (second on mobile, left column on ≥sm) */}
+            <div className="order-2 sm:order-1 -mx-1 sm:mx-0 px-1 flex flex-row sm:flex-col gap-2 sm:gap-3 overflow-x-auto sm:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x">
                 {media.map((m, i) => {
-                    const activeCls = active === i ? 'border-emerald-600 ring-2 ring-emerald-200' : 'border-slate-200 hover:border-slate-300'
+                    const activeCls =
+                        active === i ? 'border-emerald-600 ring-2 ring-emerald-200' : 'border-slate-200 hover:border-slate-300'
                     return (
                         <button
                             key={i}
                             onClick={() => setActive(i)}
                             aria-pressed={active === i}
-                            className={`relative aspect-square w-[76px] sm:w-[86px] rounded-md border bg-white ${activeCls}`}
+                            className={`relative aspect-square h-[64px] w-[64px] sm:w-[86px] sm:h-[86px] rounded-md border bg-white ${activeCls}`}
                             title={m.label || (m.type === 'video' ? 'Video' : 'Hình ảnh')}
                         >
                             {m.type === 'image' ? (
@@ -71,49 +105,6 @@ export default function ProductGallery({
                     )
                 })}
             </div>
-
-            {/* Main viewer */}
-            <div className="relative min-h-[360px] sm:min-h-[520px] rounded-lg border border-slate-200 bg-white overflow-hidden">
-                {isVideo ? (
-                    mainEmbed ? (
-                        <iframe
-                            className="absolute inset-0 h-full w-full"
-                            src={mainEmbed}
-                            title={main.label || 'product video'}
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            referrerPolicy="no-referrer-when-downgrade"
-                            allowFullScreen
-                        />
-                    ) : (
-                        <div className="absolute inset-0 grid place-items-center text-slate-700">
-                            <div className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm">Không tìm thấy nguồn video</div>
-                        </div>
-                    )
-                ) : main.type === 'image' ? (
-                    <Image src={main.src} alt={main.label || 'image'} fill sizes="760px" className="object-contain" />
-                ) : (
-                    <div className="absolute inset-0 grid place-items-center text-slate-700">
-                        <div className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm">
-                            {main.type === 'spec' ? 'Bảng thông số kỹ thuật' : 'Mô hình 3D'}
-                        </div>
-                    </div>
-                )}
-            </div>
         </div>
     )
 }
-
-/* -----------------------------------------------------------------------------
-USAGE EXAMPLE
-
-<ProductGallery
-  media={[
-    { type: 'video', youtubeId: 'dQw4w9WgXcQ', src: '', label: 'Video giới thiệu' },
-    { type: 'image', src: '/images/products/downlight-main.png', thumb: '/images/products/downlight-main.png', label: 'Ảnh 1' },
-    { type: 'image', src: '/images/products/downlight-2.png', label: 'Ảnh 2' },
-  ]}
-/>
-
-- Mặc định sẽ chọn video (nếu có) làm slide đầu và autoplays (mute) theo `autoPlayFirstVideo`.
-- Nếu không dùng YouTube, truyền `{ type:'video', videoUrl:'https://your.cdn/embed.mp4', poster:'/poster.jpg' }` + `thumb`.
----------------------------------------------------------------------------- */

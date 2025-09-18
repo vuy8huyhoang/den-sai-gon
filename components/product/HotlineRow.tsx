@@ -125,7 +125,7 @@ export default function HotlineRow({
     calculatorHref,
     onOpenCalculator,
     calcText = 'Tính chi phí lắp đặt',
-    callText = 'Liên hệ tư vấn',
+    callText = 'Tư vấn',
     hotlines = [],
     loadingCalc = false,
     disabled = false,
