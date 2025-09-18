@@ -26,10 +26,10 @@ export default function CategoryHero({
 
             <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
                 {/* Banner lớn bên trái */}
-                <CardLink banner={main} className="h-[220px]" priority />
+                <CardLink banner={main} className="h-[90px] md:h-[220px]" priority />
 
                 {/* 2 banner bên phải */}
-                <div className="grid gap-4">
+                <div className="gap-4 hidden md:grid">
                     <CardLink banner={rightTop} className="aspect-[21/5]" />
                     <CardLink banner={rightBottom} className="aspect-[21/5]" />
                 </div>
