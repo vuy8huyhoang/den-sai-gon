@@ -166,8 +166,8 @@ function Address({ title, lines, phone, note, email, mapHref }: {
             <ul className="space-y-2 text-sm text-slate-700">
                 {lines.map((l, i) => (
                     <li key={i} className="flex items-start gap-2">
-                        <MapPin className="mt-0.5 h-4 w-4 text-emerald-600" />
-                        <span>
+                        <MapPin className="mt-0.5 h-4 w-4 text-emerald-600 shrink-0" />
+                        <span className='flex-1 min-w-0 whitespace-normal break-words'>
                             {l}
                             {mapHref && (
                                 <Link href={mapHref} className="ml-2 text-emerald-700 hover:underline">
