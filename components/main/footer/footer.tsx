@@ -84,6 +84,7 @@ export default function Footer() {
                                 '19 KC ấp Mỹ Hoà 1, Tân Xuân, Hóc Môn, TP.HCM (7h30–17h30, T2–T7)',
                             ]}
                             phone="0853892898"
+                            note="Kho hàng chính"
                             email="denvietsaigon@gmail.com"
                             mapHref="#"
                         />
